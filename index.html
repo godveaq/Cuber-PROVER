@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glitch SQL Injector</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #00ff41;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        #glitch-sql-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .glitch-header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .glitch-title {
+            font-size: 3rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41, 0 0 30px #00ff41;
+            position: relative;
+        }
+        
+        .glitch-subtitle {
+            font-size: 1.2rem;
+            color: #ff00ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .glitch-main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+        
+        @media (min-width: 768px) {
+            .glitch-main-content {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .glitch-input-section {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #00ff41;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .glitch-label {
+            display: block;
+            margin-bottom: 10px;
+            color: #ff00ff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .glitch-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            border-radius: 3px;
+        }
+        
+        .glitch-input:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+        }
+        
+        .glitch-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #00ff41, #00802b);
+            color: #000;
+            border: none;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .glitch-button:hover {
+            background: linear-gradient(45deg, #00802b, #00ff41);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.7);
+            transform: translateY(-2px);
+        }
+        
+        .disclaimer-section {
+            margin-top: 20px;
+        }
+        
+        .disclaimer {
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff0000;
+            padding: 10px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            color: #ff6666;
+        }
+        
+        .glitch-results-section {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #ff00ff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+            height: fit-content;
+        }
+        
+        .results-title {
+            color: #ff00ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .results-container {
+            min-height: 300px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #555;
+            border-radius: 3px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .initial-message {
+            color: #888;
+            font-style: italic;
+            text-align: center;
+            padding: 50px 0;
+        }
+        
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+        
+        .message-info { border-left: 3px solid #00ff41; background: rgba(0, 255, 65, 0.1); }
+        .message-warning { border-left: 3px solid #ffff00; background: rgba(255, 255, 0, 0.1); }
+        .message-error { border-left: 3px solid #ff0000; background: rgba(255, 0, 0, 0.1); }
+        
+        .scan-summary {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .vulnerabilities-list {
+            margin-top: 15px;
+        }
+        
+        .vulnerability-item {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            border-left: 4px solid;
+        }
+        
+        .vulnerability-item.high { border-color: #ff0000; background: rgba(255, 0, 0, 0.1); }
+        .vulnerability-item.medium { border-color: #ffff00; background: rgba(255, 255, 0, 0.1); }
+        .vulnerability-item.low { border-color: #00ff41; background: rgba(0, 255, 65, 0.1); }
+        
+        .vuln-type { font-weight: bold; color: #ff00ff; margin-bottom: 5px; }
+        .vuln-severity { font-size: 0.8rem; margin-bottom: 3px; }
+        .vuln-param, .vuln-payload, .vuln-path { font-size: 0.9rem; color: #aaa; }
+        
+        .no-vulnerabilities { color: #00ff41; text-align: center; padding: 20px; }
+        
+        .glitch-footer {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #666;
+        }
+        
+        .status-indicator.ready { background: #00ff41; }
+        .status-indicator.scanning { 
+            background: #ffff00; 
+            animation: pulse 1s infinite;
+        }
+        
+        .glitch-effect {
+            position: relative;
+        }
+        
+        .glitch-effect::before,
+        .glitch-effect::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .glitch-effect::before {
+            left: 2px;
+            text-shadow: -2px 0 #ff00c1;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim 5s infinite linear alternate-reverse;
+        }
+        
+        .glitch-effect::after {
+            left: -2px;
+            text-shadow: -2px 0 #00fff9, 2px 2px #ff00c1;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim2 5s infinite linear alternate-reverse;
+        }
+        
+        .glitch-active {
+            animation: glitch 0.1s infinite linear;
+        }
+        
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+        
+        @keyframes glitch-anim {
+            0% { clip: rect(42px, 9999px, 44px, 0); }
+            5% { clip: rect(12px, 9999px, 59px, 0); }
+            10% { clip: rect(48px, 9999px, 29px, 0); }
+            15% { clip: rect(42px, 9999px, 73px, 0); }
+            20% { clip: rect(63px, 9999px, 27px, 0); }
+            25% { clip: rect(34px, 9999px, 55px, 0); }
+            30% { clip: rect(86px, 9999px, 73px, 0); }
+            35% { clip: rect(20px, 9999px, 20px, 0); }
+            40% { clip: rect(26px, 9999px, 60px, 0); }
+            45% { clip: rect(25px, 9999px, 66px, 0); }
+            50% { clip: rect(57px, 9999px, 93px, 0); }
+            55% { clip: rect(5px, 9999px, 46px, 0); }
+            60% { clip: rect(82px, 9999px, 31px, 0); }
+            65% { clip: rect(54px, 9999px, 27px, 0); }
+            70% { clip: rect(28px, 9999px, 99px, 0); }
+            75% { clip: rect(45px, 9999px, 69px, 0); }
+            80% { clip: rect(23px, 9999px, 85px, 0); }
+            85% { clip: rect(54px, 9999px, 84px, 0); }
+            90% { clip: rect(45px, 9999px, 47px, 0); }
+            95% { clip: rect(37px, 9999px, 20px, 0); }
+            100% { clip: rect(73px, 9999px, 99px, 0); }
+        }
+        
+        @keyframes glitch-anim2 {
+            0% { clip: rect(65px, 9999px, 100px, 0); }
+            5% { clip: rect(52px, 9999px, 74px, 0); }
+            10% { clip: rect(79px, 9999px, 85px, 0); }
+            15% { clip: rect(75px, 9999px, 5px, 0); }
+            20% { clip: rect(67px, 9999px, 61px, 0); }
+            25% { clip: rect(14px, 9999px, 79px, 0); }
+            30% { clip: rect(1px, 9999px, 66px, 0); }
+            35% { clip: rect(86px, 9999px, 30px, 0); }
+            40% { clip: rect(23px, 9999px, 98px, 0); }
+            45% { clip: rect(85px, 9999px, 72px, 0); }
+            50% { clip: rect(71px, 9999px, 75px, 0); }
+            55% { clip: rect(2px, 9999px, 48px, 0); }
+            60% { clip: rect(30px, 9999px, 16px, 0); }
+            65% { clip: rect(59px, 9999px, 50px, 0); }
+            70% { clip: rect(41px, 9999px, 62px, 0); }
+            75% { clip: rect(2px, 9999px, 82px, 0); }
+            80% { clip: rect(47px, 9999px, 73px, 0); }
+            85% { clip: rect(3px, 9999px, 27px, 0); }
+            90% { clip: rect(26px, 9999px, 55px, 0); }
+            95% { clip: rect(42px, 9999px, 97px, 0); }
+            100% { clip: rect(38px, 9999px, 49px, 0); }
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <script src="glitch_sql_interface.js"></script>
+</body>
+</html>
